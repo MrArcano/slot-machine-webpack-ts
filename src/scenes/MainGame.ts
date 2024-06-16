@@ -13,8 +13,8 @@ export class MainGame extends Scene {
 
     create() {
         // create fake reels
-        // const symbols = ['a', 'k', 'q', 'p-blond', 'p-brown', 'p-pink', 'bonus', 'p-forest', 'wild'];
-        const symbols = ['a', 'k', 'q', 'p-forest', 'wild'];
+        const symbols = ['a', 'k', 'q', 'p-blond', 'p-brown', 'p-pink', 'bonus', 'wild', 'p-forest'];
+        // const symbols = ['a', 'k', 'q', 'p-forest', 'wild'];
         const reels = this.createFakeReels(symbols, 5, 20);
         console.log(reels);
 
@@ -25,7 +25,6 @@ export class MainGame extends Scene {
         // Carica l'immagine bg-logo
         this.createBackground(screenWidth, screenHeight);
 
-        console.log(reels.length);
         const containerCoordX = [-455,-230,0,230,455];
         this.containers = [];
 
@@ -50,10 +49,29 @@ export class MainGame extends Scene {
 
     private createFakeReels(symbols: string[], reelCount: number, symbolCount: number): string[][] {
         const reels = [];
+        let min = 0;
+        let max = 0;
         for (let i = 0; i < reelCount; i++) {
             const arrayTemp = [];
             for (let j = 0; j < symbolCount; j++) {
-                arrayTemp.push(symbols[Phaser.Math.Between(0, symbols.length - 1)]);
+                const choice = Phaser.Math.Between(1,100);
+                if (choice <= 60){
+                    min = 0;
+                    max = 2;
+                }else if(choice <= 90){
+                    min = 3;
+                    max = 5;
+                }else if (choice <= 95){
+                    min = 6;
+                    max = 6;
+                }else if (choice <= 98){
+                    min = 7;
+                    max = 7;
+                }else if (choice <= 100){
+                    min = 8;
+                    max = 8;
+                }
+                arrayTemp.push(symbols[Phaser.Math.Between(min, max)]);
             }
             reels.push(arrayTemp);
         }
@@ -85,18 +103,24 @@ export class MainGame extends Scene {
 
         this.btn.setInteractive({ cursor: 'pointer' })
             .on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
+                // disabilitare il bottone
+                this.btn.disableInteractive();
+
                 console.log("Bottone premuto");
                 this.containers.forEach((el, index) => {
                     this.tweens.add({
                         targets: el,
-                        duration: 1000,
+                        duration: 3000,
                         delay: 200 * index,
-                        y: el.y + 1000, // Sposta verso il basso
+                        y: el.y + 630, // Sposta verso il basso
                         ease: 'Linear', // Tipo di easing
                         onComplete: () => {
                             console.log('Scorrimento completato per:', el);
                             console.log(el.y);
+                            console.log(el.displayHeight);
                             
+                            // riabilitare il bottone
+                            this.btn.setInteractive({ cursor: 'pointer' });
                         }
                     });
                 });
