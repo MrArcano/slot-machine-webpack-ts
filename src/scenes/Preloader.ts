@@ -21,9 +21,6 @@ export class Preloader extends Scene {
         // Set display size of background image
         bg.setDisplaySize(screenWidth + 16, screenHeight + 16);
 
-        // bg.displayWidth = this.sys.canvas.width
-        // bg.displayHeight = this.sys.canvas.height
-
         // Add game logo
         const logo = this.add.image(screenWidth / 2, (screenHeight / 2) * 0.7, 'logo');
 
