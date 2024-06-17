@@ -50,7 +50,7 @@ export class MainGame extends Scene {
         this.createContainerSlotWithMask();
         
         // Create the SPIN button
-        this.createButton();
+        this.createButtonSpin();
     }
 
     private createContainerSlotWithMask() {
@@ -172,8 +172,7 @@ export class MainGame extends Scene {
         return reels;
     }
 
-    // CREATE BUTTON SPIN
-    private createButton() {
+    private createButtonSpin() {
         const graphics = this.add.graphics();
         this.drawButtonSpin(graphics, 0xff9a00); // Initial color
 
@@ -187,46 +186,51 @@ export class MainGame extends Scene {
         btn.setSize(150, 75);
 
         btn.setInteractive({ cursor: 'pointer' })
-            .on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
-                // disable the button
-                btn.disableInteractive();
+        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
+            this.onButtonDown(btn);
+        })
+        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
+            this.drawButtonSpin(graphics, 0xff7500); // Hover color
+        })
+        .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
+            this.drawButtonSpin(graphics, 0xff9a00); // Original color
+        });
+    }
 
-                // axios call and update 
-                this.backEndSymbolsOld = this.backEndSymbols;
-                // this.backEndSymbols = axios response;
-
-                if(this.containers[0].y !== 450){
-
-                    
-                    // destroy container slot
-                    this.containerSlot.destroy();
-                    // create new container slot
-                    this.createContainerSlotWithMask();
+    private onButtonDown(btn: GameObjects.Container) {
+        // Disable the button
+        btn.disableInteractive();
+    
+        // Axios call and update 
+        this.backEndSymbolsOld = this.backEndSymbols;
+        // this.backEndSymbols = axios response;
+    
+        if (this.containers[0].y !== 450) {
+            // Destroy container slot
+            this.containerSlot.destroy();
+            // Create new container slot
+            this.createContainerSlotWithMask();
+        }
+    
+        this.animateReels(btn);
+    }
+    
+    private animateReels(btn: GameObjects.Container) {
+        this.containers.forEach((el, index) => {
+            this.tweens.add({
+                targets: el,
+                duration: 5000 + (300 * index),
+                delay: 200 * index,
+                y: el.y + (210 * (this.numSymbolsPerReel)), // Move the reels
+                ease: 'Bounce.Out', // Easing type
+                onComplete: () => {            
+                    // Re-enable the button when the last reel has finished
+                    if (index === this.containers.length - 1) { 
+                        btn.setInteractive({ cursor: 'pointer' });
+                    }
                 }
-
-                this.containers.forEach((el, index) => {
-                    this.tweens.add({
-                        targets: el,
-                        duration: 5000 + (300 * index),
-                        delay: 200 * index,
-                        y: el.y + (210 * (this.numSymbolsPerReel)), // Move the reels
-                        ease: 'Bounce.Out', // Easing type
-                        onComplete: () => {            
-                            // re-enable the button when the last reel has finished
-                            if(index === this.containers.length - 1){ 
-                                btn.setInteractive({ cursor: 'pointer' });
-                            }
-                        }
-                    });
-
-                });
-            })
-            .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-                this.drawButtonSpin(graphics, 0xff7500); // Hover color
-            })
-            .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
-                this.drawButtonSpin(graphics, 0xff9a00); // Original color
             });
+        });
     }
 
     private drawButtonSpin(graphics: GameObjects.Graphics, color: number) {
