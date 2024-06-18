@@ -19,6 +19,7 @@ export class MainGame extends Scene {
     backEndSymbolsOld: string[][] = [] ;
     numSymbolsPerReel: number = 18;
     numReelPerSlot: number = 5;
+    isAnimatedLoading: boolean;
 
     constructor() {
         super('MainGame');
@@ -165,6 +166,9 @@ export class MainGame extends Scene {
     private onButtonDown(btn: GameObjects.Container) {
         // Disable the button
         btn.disableInteractive();
+
+        // change flag start animation update
+        this.isAnimatedLoading = true;
     
         // ******************************************
         // PSEUDO CODE
@@ -179,8 +183,20 @@ export class MainGame extends Scene {
             // Create new container slot
             this.createContainerSlotWithMask();
         }
-    
-        this.animateReels(btn);
+        // this.animateReels(btn);
+    }
+
+    update(_time: number, delta: number): void {
+
+        if(this.isAnimatedLoading){
+            const moveAmount = (delta / 1000) * 210 * 16;
+            this.containers.forEach((el) => {
+                el.y += moveAmount;
+                if(el.y >= (450 + (210 * this.numSymbolsPerReel))){
+                    el.y = 450;
+                }
+            });
+        }
     }
     
     /**
@@ -188,7 +204,7 @@ export class MainGame extends Scene {
      *
      * @param btn The SPIN button container.
      */
-    private animateReels(btn: GameObjects.Container) {
+    public animateReels(btn: GameObjects.Container) {
         this.containers.forEach((el, index) => {
             this.tweens.add({
                 targets: el,
