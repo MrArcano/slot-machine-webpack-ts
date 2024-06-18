@@ -1,4 +1,5 @@
 import { Scene, GameObjects } from 'phaser';
+import { Utility } from './Utility'; 
 
 export class MainGame extends Scene {
     screenWidth: number;
@@ -15,13 +16,7 @@ export class MainGame extends Scene {
                         ['p-pink', 'a', 'q'],
                         ['p-pink', 'p-pink', 'a']
                     ];
-    backEndSymbolsOld: string[][] = [
-                        ['a', 'bonus', 'k'],
-                        ['p-brown', 'p-blond', 'k'],
-                        ['q', 'a', 'bonus'],
-                        ['p-pink', 'a', 'q'],
-                        ['p-pink', 'p-pink', 'a']
-                    ];
+    backEndSymbolsOld: string[][] = [] ;
     numSymbolsPerReel: number = 18;
     numReelPerSlot: number = 5;
 
@@ -53,10 +48,14 @@ export class MainGame extends Scene {
         this.createButtonSpin();
     }
 
+    
+
+    /**
+     * Creates the slot container with a mask to display only a part of the reels.
+     */
     private createContainerSlotWithMask() {
         // Generate an array[reel][symbol]
-        // default 5 reels with 30 symbols
-        let reels = this.createFakeReels(this.symbols, this.numReelPerSlot, this.numSymbolsPerReel);
+        let reels = Utility.createFakeReels(this.symbols, this.numReelPerSlot, this.numSymbolsPerReel);
         console.log(reels);
 
         // if there is an OLD then put it at the top of the array
@@ -99,6 +98,11 @@ export class MainGame extends Scene {
         //-------------------------------------------------------------------------------------
     }
 
+    /**
+     * Creates containers for each reel and fills them with symbols.
+     *
+     * @param reels string[][] representing the reels of the slot machine.
+     */
     private createContainersReel(reels: string[][]) {
         // spacing between the reels
         const containerCoordX = [-455, -230, 0, 230, 455];
@@ -126,52 +130,8 @@ export class MainGame extends Scene {
     }
 
     /**
-     * Generates a string[][]: reels of a slot machine with symbols
-     * 
-     * @param symbols Array of 9 symbols to be used in the reels.
-     * @param reelCount Number of reels in the slot machine.
-     * @param symbolCount Number of symbols per reel.
-     * @returns A string[][] where each sub-array represents a reel with symbols.
-     *
-     * The probabilities of symbol are as follows:
-     * 
-     * - 60% chance to select symbols from indices 0 to 2.
-     * - 30% chance to select symbols from indices 3 to 5.
-     * - 5% chance to select the symbol at index 6.
-     * - 3% chance to select the symbol at index 7.
-     * - 2% chance to select the symbol at index 8.
+     * Creates the SPIN button and sets up its interactive behavior.
      */
-    private createFakeReels(symbols: string[], reelCount: number, symbolCount: number): string[][] {
-        const reels = [];
-        let min = 0;
-        let max = 0;
-        for (let i = 0; i < reelCount; i++) {
-            const arrayTemp = [];
-            for (let j = 0; j < symbolCount; j++) {
-                const choice = Phaser.Math.Between(1,100);
-                if (choice <= 60){
-                    min = 0;
-                    max = 2;
-                }else if(choice <= 90){
-                    min = 3;
-                    max = 5;
-                }else if (choice <= 95){
-                    min = 6;
-                    max = 6;
-                }else if (choice <= 98){
-                    min = 7;
-                    max = 7;
-                }else if (choice <= 100){
-                    min = 8;
-                    max = 8;
-                }
-                arrayTemp.push(symbols[Phaser.Math.Between(min, max)]);
-            }
-            reels.push(arrayTemp);
-        }
-        return reels;
-    }
-
     private createButtonSpin() {
         const graphics = this.add.graphics();
         this.drawButtonSpin(graphics, 0xff9a00); // Initial color
@@ -197,13 +157,21 @@ export class MainGame extends Scene {
         });
     }
 
+    /**
+     * Handles the behavior when the SPIN button is clicked.
+     *
+     * @param btn The SPIN button container.
+     */
     private onButtonDown(btn: GameObjects.Container) {
         // Disable the button
         btn.disableInteractive();
     
+        // ******************************************
+        // PSEUDO CODE
         // Axios call and update 
         this.backEndSymbolsOld = this.backEndSymbols;
         // this.backEndSymbols = axios response;
+        // ******************************************
     
         if (this.containers[0].y !== 450) {
             // Destroy container slot
@@ -215,6 +183,11 @@ export class MainGame extends Scene {
         this.animateReels(btn);
     }
     
+    /**
+     * Animates the reels by moving them down and re-enables the SPIN button after animation.
+     *
+     * @param btn The SPIN button container.
+     */
     private animateReels(btn: GameObjects.Container) {
         this.containers.forEach((el, index) => {
             this.tweens.add({
@@ -233,6 +206,12 @@ export class MainGame extends Scene {
         });
     }
 
+    /**
+     * Draws the SPIN button with the specified color.
+     *
+     * @param graphics The graphics object used to draw the button.
+     * @param color The fill color of the button.
+     */
     private drawButtonSpin(graphics: GameObjects.Graphics, color: number) {
         graphics.clear();
         // Border
