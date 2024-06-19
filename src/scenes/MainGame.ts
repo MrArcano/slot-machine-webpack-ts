@@ -1,5 +1,6 @@
 import { Scene, GameObjects } from 'phaser';
 import { Utility } from './Utility'; 
+import axios from 'axios';
 
 export class MainGame extends Scene {
     screenWidth: number;
@@ -9,17 +10,15 @@ export class MainGame extends Scene {
     bgReels: GameObjects.Image;
     containerSlot: GameObjects.Container;
     symbols: string[] = ['a', 'k', 'q', 'p-blond', 'p-brown', 'p-pink', 'bonus', 'wild', 'p-forest'];
-    backEndSymbols: string[][] = [
-                        ['q', 'a', 'k'],
-                        ['p-brown', 'p-blond', 'k'],
-                        ['q', 'a', 'bonus'],
-                        ['p-pink', 'a', 'q'],
-                        ['p-pink', 'p-pink', 'a']
-                    ];
+    backEndSymbols: string[][] = [];
     backEndSymbolsOld: string[][] = [] ;
     numSymbolsPerReel: number = 18;
     numReelPerSlot: number = 5;
-    isAnimatedLoading: boolean;
+    isAnimatedLoading: boolean = false;
+
+    timeAnimation: number = 0;
+    dataReceived: boolean;
+    btnSpin: GameObjects.Container;
 
     constructor() {
         super('MainGame');
@@ -143,12 +142,12 @@ export class MainGame extends Scene {
         });
         btnText.setOrigin(0.5);
 
-        const btn = this.add.container(this.screenWidth / 2, this.screenHeight * 0.825, [graphics, btnText]);
-        btn.setSize(150, 75);
+        this.btnSpin = this.add.container(this.screenWidth / 2, this.screenHeight * 0.825, [graphics, btnText]);
+        this.btnSpin.setSize(150, 75);
 
-        btn.setInteractive({ cursor: 'pointer' })
+        this.btnSpin.setInteractive({ cursor: 'pointer' })
         .on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
-            this.onButtonDown(btn);
+            this.onButtonDown();
         })
         .on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
             this.drawButtonSpin(graphics, 0xff7500); // Hover color
@@ -163,64 +162,94 @@ export class MainGame extends Scene {
      *
      * @param btn The SPIN button container.
      */
-    private onButtonDown(btn: GameObjects.Container) {
+    private onButtonDown() {
+        console.log("BOTTONE CLICCATO");
+
         // Disable the button
-        btn.disableInteractive();
+        this.btnSpin.disableInteractive();
 
         // change flag start animation update
         this.isAnimatedLoading = true;
+
+        // Make a request for a user with a given ID
+        axios.get('http://localhost:8000/api/get-reels-slot')
+        .then((response) => {
+            // handle success
+            if(response.data['status'] === "success"){
+                this.backEndSymbolsOld = this.backEndSymbols;
+                this.backEndSymbols = response.data['data'];
+                console.log(response.data['data']);
+            }
+            this.dataReceived = true;
+        })
+        .catch(function (error) {
+            // handle error
+            console.log(error);
+        })
+        .finally(function () {
+            // always executed
+        });
     
-        // ******************************************
-        // PSEUDO CODE
-        // Axios call and update 
-        this.backEndSymbolsOld = this.backEndSymbols;
-        // this.backEndSymbols = axios response;
-        // ******************************************
-    
-        if (this.containers[0].y !== 450) {
-            // Destroy container slot
-            this.containerSlot.destroy();
-            // Create new container slot
-            this.createContainerSlotWithMask();
-        }
-        // this.animateReels(btn);
+        //! this.animateReels(btn); 
     }
 
-    update(_time: number, delta: number): void {
-
+    update(_time: number, delta: number): void {  
         if(this.isAnimatedLoading){
+
             const moveAmount = (delta / 1000) * 210 * 16;
             this.containers.forEach((el) => {
                 el.y += moveAmount;
-                if(el.y >= (450 + (210 * this.numSymbolsPerReel))){
+                if(el.y >= (450 + (210 * (this.numSymbolsPerReel - 3)))){
                     el.y = 450;
                 }
             });
+
+            this.timeAnimation += delta;
+
+            if(this.timeAnimation >= 5000 && this.dataReceived === true){               
+                this.isAnimatedLoading = false;
+                this.dataReceived = false;
+                this.timeAnimation = 0;
+                this.btnSpin.setInteractive({ cursor: 'pointer' });
+
+                // Destroy container slot
+                this.containerSlot.destroy();
+
+                // Create new container slot
+                this.createContainerSlotWithMask();
+                
+                // sposto la Y dei container alla fine
+                this.containers.forEach((el)=>{
+                    el.y = 450 + (210 * this.numSymbolsPerReel);
+                });
+
+            }
         }
     }
     
-    /**
-     * Animates the reels by moving them down and re-enables the SPIN button after animation.
-     *
-     * @param btn The SPIN button container.
-     */
-    public animateReels(btn: GameObjects.Container) {
-        this.containers.forEach((el, index) => {
-            this.tweens.add({
-                targets: el,
-                duration: 5000 + (300 * index),
-                delay: 200 * index,
-                y: el.y + (210 * (this.numSymbolsPerReel)), // Move the reels
-                ease: 'Bounce.Out', // Easing type
-                onComplete: () => {            
-                    // Re-enable the button when the last reel has finished
-                    if (index === this.containers.length - 1) { 
-                        btn.setInteractive({ cursor: 'pointer' });
-                    }
-                }
-            });
-        });
-    }
+    //! FUNCTION animateReels
+    //  /**
+    //  * Animates the reels by moving them down and re-enables the SPIN button after animation.
+    //  *
+    //  * @param btn The SPIN button container.
+    //  */
+    // public animateReels(btn: GameObjects.Container) {
+    //     this.containers.forEach((el, index) => {
+    //         this.tweens.add({
+    //             targets: el,
+    //             duration: 5000 + (300 * index),
+    //             delay: 200 * index,
+    //             y: el.y + (210 * (this.numSymbolsPerReel)), // Move the reels
+    //             ease: 'Bounce.Out', // Easing type
+    //             onComplete: () => {            
+    //                 // Re-enable the button when the last reel has finished
+    //                 if (index === this.containers.length - 1) { 
+    //                     this.btnSpin.setInteractive({ cursor: 'pointer' });
+    //                 }
+    //             }
+    //         });
+    //     });
+    // }
 
     /**
      * Draws the SPIN button with the specified color.
