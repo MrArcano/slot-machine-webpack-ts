@@ -12,12 +12,11 @@ export class MainGame extends Scene {
     symbols: string[] = ['a', 'k', 'q', 'p-blond', 'p-brown', 'p-pink', 'bonus', 'wild', 'p-forest'];
     backEndSymbols: string[][] = [];
     backEndSymbolsOld: string[][] = [] ;
-    numSymbolsPerReel: number = 18;
+    numSymbolsPerReel: number = 21;
     numReelPerSlot: number = 5;
     isAnimatedLoading: boolean = false;
-
+    dataReceived: boolean = false;
     timeAnimation: number = 0;
-    dataReceived: boolean;
     btnSpin: GameObjects.Container;
 
     constructor() {
@@ -180,7 +179,9 @@ export class MainGame extends Scene {
                 this.backEndSymbols = response.data['data'];
                 console.log(response.data['data']);
             }
+            
             this.dataReceived = true;
+            
         })
         .catch(function (error) {
             // handle error
@@ -203,14 +204,13 @@ export class MainGame extends Scene {
                     el.y = 450;
                 }
             });
-
             this.timeAnimation += delta;
 
             if(this.timeAnimation >= 5000 && this.dataReceived === true){               
                 this.isAnimatedLoading = false;
                 this.dataReceived = false;
                 this.timeAnimation = 0;
-                this.btnSpin.setInteractive({ cursor: 'pointer' });
+                // this.btnSpin.setInteractive({ cursor: 'pointer' });
 
                 // Destroy container slot
                 this.containerSlot.destroy();
@@ -219,37 +219,47 @@ export class MainGame extends Scene {
                 this.createContainerSlotWithMask();
                 
                 // sposto la Y dei container alla fine
-                this.containers.forEach((el)=>{
-                    el.y = 450 + (210 * this.numSymbolsPerReel);
-                });
+                // this.containers.forEach((el)=>{
+                //     el.y = 450 + (210 * this.numSymbolsPerReel);
+                // });
+
+                this.animateReels();
+
 
             }
         }
     }
     
     //! FUNCTION animateReels
-    //  /**
-    //  * Animates the reels by moving them down and re-enables the SPIN button after animation.
-    //  *
-    //  * @param btn The SPIN button container.
-    //  */
-    // public animateReels(btn: GameObjects.Container) {
-    //     this.containers.forEach((el, index) => {
-    //         this.tweens.add({
-    //             targets: el,
-    //             duration: 5000 + (300 * index),
-    //             delay: 200 * index,
-    //             y: el.y + (210 * (this.numSymbolsPerReel)), // Move the reels
-    //             ease: 'Bounce.Out', // Easing type
-    //             onComplete: () => {            
-    //                 // Re-enable the button when the last reel has finished
-    //                 if (index === this.containers.length - 1) { 
-    //                     this.btnSpin.setInteractive({ cursor: 'pointer' });
-    //                 }
-    //             }
-    //         });
-    //     });
-    // }
+     /**
+     * Animates the reels by moving them down and re-enables the SPIN button after animation.
+     *
+     * @param btn The SPIN button container.
+     */
+    private animateReels() {
+        this.containers.forEach((el, index) => {
+            this.tweens.add({
+                targets: el,
+                duration: 500,
+                // delay: 200 * index,
+                // y: el.y + (210 * (this.numSymbolsPerReel)), // Move the reels
+                y: 450 + (210 * (this.numSymbolsPerReel)) / 2,
+                ease: 'Linear',
+                onComplete: () => {           
+                    this.tweens.add({
+                        targets: el,
+                        y: 450 + (210 * (this.numSymbolsPerReel)),
+                        duration: 2000,
+                        ease: 'Bounce.Out'
+                    });
+                    // Re-enable the button when the last reel has finished
+                    if (index === this.containers.length - 1) { 
+                        this.btnSpin.setInteractive({ cursor: 'pointer' });
+                    }
+                }
+            });
+        });
+    }
 
     /**
      * Draws the SPIN button with the specified color.
