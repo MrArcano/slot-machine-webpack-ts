@@ -189,6 +189,8 @@ export class MainGame extends Scene {
   private onButtonDown() {
     console.log("BOTTONE CLICCATO");
 
+    this.updateReels();
+
     // Disable the button
     this.btnSpin.disableInteractive();
 
@@ -219,23 +221,39 @@ export class MainGame extends Scene {
 
   update(_time: number, delta: number) {
     if (this.isAnimatedLoading) {
-      const moveAmount = (delta / 1000) * this.heightSymbols * 16;
-      this.containers.forEach((el) => {
-        el.y += moveAmount;
-        if (el.y >= 450 + this.heightSymbols * (this.numSymbolsPerReel - 3)) {
-          el.y = 450;
-        }
+      const yInitial = 450; // Initial y position
+      const yFinal = 450 + this.heightSymbols * (this.numSymbolsPerReel - 3); // Final y position
+      const duration = 1000; // Duration of the animation in milliseconds
+      const moveAmount = ((yFinal - yInitial) / duration) * delta;
+
+      // const moveAmount = (delta / 1000) * this.heightSymbols * 12;
+      this.containers.forEach((el, index) => {
+        setTimeout(() => {
+          el.y += moveAmount;
+          if (el.y >= 450 + this.heightSymbols * (this.numSymbolsPerReel - 3)) {
+            el.y = 450;
+          }
+        }, index * 200);
       });
       this.timeAnimation += delta;
 
       if (this.timeAnimation >= 3000 && this.dataReceived === true) {
-        this.isAnimatedLoading = false;
-        this.dataReceived = false;
-        this.timeAnimation = 0;
-
         this.updateReels();
 
-        this.animateReels();
+        if (
+          this.containers[0].y > 450 &&
+          this.containers[0].y <
+            450 + this.heightSymbols * (this.numSymbolsPerReel - 6) &&
+          this.containers[this.containers.length - 1].y > 450 &&
+          this.containers[this.containers.length - 1].y <
+            450 + this.heightSymbols * (this.numSymbolsPerReel - 6)
+        ) {
+          this.isAnimatedLoading = false;
+          this.dataReceived = false;
+          this.timeAnimation = 0;
+
+          this.animateReels();
+        }
       }
     }
   }
@@ -281,16 +299,15 @@ export class MainGame extends Scene {
     this.containers.forEach((el, index) => {
       this.tweens.add({
         targets: el,
-        duration: 200,
-        // delay: 200 * index,
-        // y: el.y + (this.heightSymbols * (this.numSymbolsPerReel)), // Move the reels
-        y: 450 + this.heightSymbols * (this.numSymbolsPerReel - 4),
+        duration: 1300,
+        delay: index * 200,
+        y: 450 + this.heightSymbols * (this.numSymbolsPerReel - 5),
         ease: "Linear",
         onComplete: () => {
           this.tweens.add({
             targets: el,
+            duration: 700,
             y: 450 + this.heightSymbols * (this.numSymbolsPerReel - 3),
-            duration: 800,
             ease: "Bounce.Out",
           });
           // Re-enable the button when the last reel has finished
