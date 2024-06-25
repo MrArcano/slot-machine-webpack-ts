@@ -51,31 +51,14 @@ export class MainGame extends Scene {
    * Create and display the background image.
    */
   private createBackground() {
-    const bg = this.add.image(
-      this.screenWidth / 2,
-      this.screenHeight / 2,
-      "background-logo"
-    );
+    const bg = this.add.image(this.screenWidth / 2, this.screenHeight / 2, "background-logo");
     bg.setDisplaySize(this.screenWidth + 16, this.screenHeight + 16);
 
-    this.add
-      .rectangle(
-        this.screenWidth / 2,
-        this.screenHeight / 2,
-        this.screenWidth,
-        this.screenHeight
-      )
+    this.add.rectangle(this.screenWidth / 2, this.screenHeight / 2, this.screenWidth, this.screenHeight)
       .setStrokeStyle(8, 0x000000);
 
-    this.bgReels = this.add.image(
-      this.screenWidth / 2,
-      (this.screenHeight / 2) * 0.9,
-      "bg-reels"
-    );
-    this.bgReels.setDisplaySize(
-      this.bgReels.width * 1.15,
-      this.bgReels.height * 1.15
-    );
+    this.bgReels = this.add.image(this.screenWidth / 2, (this.screenHeight / 2) * 0.9, "bg-reels");
+    this.bgReels.setDisplaySize(this.bgReels.width * 1.15, this.bgReels.height * 1.15);
   }
 
   /**
@@ -83,11 +66,7 @@ export class MainGame extends Scene {
    */
   private createContainerSlotWithMask() {
     // Generate an array[reel][symbol]
-    this.reels = Utility.createFakeReels(
-      this.symbols,
-      this.numReelPerSlot,
-      this.numSymbolsPerReel
-    );
+    this.reels = Utility.createFakeReels(this.symbols, this.numReelPerSlot, this.numSymbolsPerReel);
 
     this.createContainersReel();
 
@@ -132,16 +111,11 @@ export class MainGame extends Scene {
         images.push(symbolsImage);
 
         // decrease Y coordinates to space each image apart
-
         imageCoordY -= this.heightSymbols;
       }
 
       // container[i] reel
-      const container = this.add.container(
-        this.screenWidth / 2 + containerCoordX[i],
-        this.screenHeight / 2,
-        images
-      );
+      const container = this.add.container(this.screenWidth / 2 + containerCoordX[i], this.screenHeight / 2, images);
       // array of individual reels to add the effect on click
       this.containers.push(container);
     }
@@ -163,11 +137,7 @@ export class MainGame extends Scene {
     });
     btnText.setOrigin(0.5);
 
-    this.btnSpin = this.add.container(
-      this.screenWidth / 2,
-      this.screenHeight * 0.825,
-      [graphics, btnText]
-    );
+    this.btnSpin = this.add.container(this.screenWidth / 2, this.screenHeight * 0.825, [graphics, btnText]);
     this.btnSpin.setSize(150, 75);
 
     this.btnSpin
@@ -198,8 +168,7 @@ export class MainGame extends Scene {
     this.isAnimatedLoading = true;
 
     // Make a request for a user with a given ID
-    axios
-      .get("http://localhost:8000/api/get-reels-slot")
+    axios.get("http://localhost:8000/api/get-reels-slot")
       .then((response) => {
         // handle success
         if (response.data["status"] === "success") {
@@ -242,11 +211,9 @@ export class MainGame extends Scene {
 
         if (
           this.containers[0].y > 450 &&
-          this.containers[0].y <
-            450 + this.heightSymbols * (this.numSymbolsPerReel - 6) &&
+          this.containers[0].y < 450 + this.heightSymbols * (this.numSymbolsPerReel - 6) &&
           this.containers[this.containers.length - 1].y > 450 &&
-          this.containers[this.containers.length - 1].y <
-            450 + this.heightSymbols * (this.numSymbolsPerReel - 6)
+          this.containers[this.containers.length - 1].y < 450 + this.heightSymbols * (this.numSymbolsPerReel - 6)
         ) {
           this.isAnimatedLoading = false;
           this.dataReceived = false;
@@ -265,29 +232,17 @@ export class MainGame extends Scene {
     if (this.backEndSymbols.length !== 0) {
       this.containers.forEach((reel, reelIndex) => {
         const last = reel.list.length;
-        (reel.list[last - 3] as Phaser.GameObjects.Image).setTexture(
-          this.backEndSymbols[reelIndex][0]
-        );
-        (reel.list[last - 2] as Phaser.GameObjects.Image).setTexture(
-          this.backEndSymbols[reelIndex][1]
-        );
-        (reel.list[last - 1] as Phaser.GameObjects.Image).setTexture(
-          this.backEndSymbols[reelIndex][2]
-        );
+        (reel.list[last - 3] as Phaser.GameObjects.Image).setTexture(this.backEndSymbols[reelIndex][0]);
+        (reel.list[last - 2] as Phaser.GameObjects.Image).setTexture(this.backEndSymbols[reelIndex][1]);
+        (reel.list[last - 1] as Phaser.GameObjects.Image).setTexture(this.backEndSymbols[reelIndex][2]);
       });
     }
 
     if (this.backEndSymbolsOld.length !== 0) {
       this.containers.forEach((reel, reelIndex) => {
-        (reel.list[0] as Phaser.GameObjects.Image).setTexture(
-          this.backEndSymbolsOld[reelIndex][0]
-        );
-        (reel.list[1] as Phaser.GameObjects.Image).setTexture(
-          this.backEndSymbolsOld[reelIndex][1]
-        );
-        (reel.list[2] as Phaser.GameObjects.Image).setTexture(
-          this.backEndSymbolsOld[reelIndex][2]
-        );
+        (reel.list[0] as Phaser.GameObjects.Image).setTexture(this.backEndSymbolsOld[reelIndex][0]);
+        (reel.list[1] as Phaser.GameObjects.Image).setTexture(this.backEndSymbolsOld[reelIndex][1]);
+        (reel.list[2] as Phaser.GameObjects.Image).setTexture(this.backEndSymbolsOld[reelIndex][2]);
       });
     }
   }
